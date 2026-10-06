@@ -158,6 +158,11 @@ async function loadExchanges() {
       pill.dataset.state = data.checking ? 'loading' : 'ok';
       $('livePillText').textContent = data.checking ? 'در حال بررسی…' : 'پایش فعال';
     }
+    // The default exchange is now known — the gallery can load. This is the
+    // only path that loads on first visit (there is no ?ex= in the URL yet,
+    // so an early loadShots() call would bail on an empty `current`); on the
+    // later polls it re-runs harmlessly behind the signature guard.
+    await loadShots();
   } catch (err) {
     console.error('shots page: exchange list failed:', err);
   }
@@ -201,6 +206,6 @@ document.addEventListener('keydown', (ev) => {
 });
 
 loadExchanges();
-loadShots();
-// The archive grows only as checks complete; a slow poll is plenty.
-setInterval(loadShots, 30_000);
+// The poll also re-resolves the default exchange first, so a first visit that
+// landed while the server was restarting recovers on its own.
+setInterval(loadExchanges, 30_000);
